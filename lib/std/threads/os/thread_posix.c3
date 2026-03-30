@@ -191,11 +191,13 @@ fn void? NativeConditionVariable.wait_until(&cond, NativeMutex* mtx, Time time)
 }
 
 tlocal NativeThread current_thread @private;
+tlocal bool initialized @private = false;
 
 fn void* callback(void* arg) @private
 {
 	NativeThread* thread = arg;
 	current_thread = *thread;
+	initialized = true;
 	return (void*)(iptr)thread.thread_fn(thread.arg);
 }
 
@@ -221,6 +223,9 @@ fn void native_thread_exit(int result)
 
 fn NativeThread native_thread_current()
 {
+	if (!initialized) {
+		return (NativeThread){ .pthread = posix::pthread_self() };
+	}
 	return current_thread;
 }
 
